@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-o+w9omvhb0=dm@@2c3q8m_g5z2t@jbv-9@08#8ph*@$_t%_sdt
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['172.235.10.116',]
 
 
 # Application definition
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'tablemanagement',
     'CIR',
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -51,6 +52,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = 'placeflow.urls'
@@ -81,9 +84,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'placeflow1',
-        'USER': 'root',
-        'PASSWORD':'Sudharsan@02',
-        'HOST': 'localhost',
+        'USER': 'test',
+        'PASSWORD':'Test@123',
+        'HOST': '172.235.10.116',
         'PORT': '3306',
     }
 }
@@ -136,3 +139,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
