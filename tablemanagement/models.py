@@ -45,21 +45,7 @@ class gender(models.Model):
 class arrears(models.Model):
     count = models.IntegerField()
 
-class studentData(models.Model):
-    rollNo =models.CharField(max_length = 50)
-    email = models.EmailField(unique=True)
-    department = models.ForeignKey(department, on_delete = models.CASCADE, related_name = "department")
-    CGPA = models.FloatField()
-    gender = models.ForeignKey(gender, on_delete = models.CASCADE, related_name = "gender")
-    standing_Arrears = models.ForeignKey(arrears, on_delete = models.CASCADE, related_name = "arrears_standing")
-    arrear_history = models.ForeignKey(arrears, on_delete = models.CASCADE, related_name = "arrears_history")
-    markTenth = models.IntegerField(null = True)
-    markTwelfth = models.IntegerField(null= True)
-    maxCurrentArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "maxcurrentarrearsstudent",null = True)
-    historyOfArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "historyofarrearsstudent",null = True)
-    batch = models.IntegerField(null= True)
-    def __str__(self) :
-        return self.rollNo
+
 "---------------------------------------------------------------------------------------------------------------------"
 class CIRData(models.Model):
     empId = models.CharField(max_length = 20)
@@ -79,13 +65,15 @@ class jobType(models.Model):
 
 class companyData(models.Model):
     companyName = models.CharField(max_length=100)
+    websiteLink = models.CharField(max_length =255,null = True)
+    preferredGender = models.ManyToManyField(gender,null=True)
     companyDescription = models.TextField(null = True)
     jobDescription = models.TextField(null = True)
     jobRole = models.ManyToManyField(jobDescriptionModel, null= True)
     CGPA_Required = models.FloatField(null= True)
     qualification = models.ManyToManyField(Qualification, null= True)
     eligibleDepartments = models.ManyToManyField(department, null= True)
-    CTC = models.CharField(max_length = 20)
+    CTC = models.CharField(max_length = 20,null=True)
     serviceAgreement = models.CharField(max_length=30, null= True)
     trainingPeriodandStipend = models.TextField(null= True)
     workLocation = models.CharField(max_length = 100, null= True)
@@ -97,7 +85,23 @@ class companyData(models.Model):
     maxCurrentArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "maxcurrentarrearscompany", null= True)
     historyOfArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "historyofarrearscompany", null= True)
     batch = models.IntegerField(null= True)
-    
+
+class studentData(models.Model):
+    rollNo =models.CharField(max_length = 50)
+    department = models.ForeignKey(department, on_delete = models.CASCADE, related_name = "department")
+    CGPA = models.FloatField()
+    gender = models.ForeignKey(gender, on_delete = models.CASCADE, related_name = "gender")
+    standing_Arrears = models.ForeignKey(arrears, on_delete = models.CASCADE, related_name = "arrears_standing")
+    arrear_history = models.ForeignKey(arrears, on_delete = models.CASCADE, related_name = "arrears_history")
+    markTenth = models.IntegerField(null = True)
+    markTwelfth = models.IntegerField(null= True)
+    # maxCurrentArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "maxcurrentarrearsstudent",null = True)
+    # historyOfArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "historyofarrearsstudent",null = True)
+    batch = models.IntegerField(null= True)
+    appliedCompanies = models.ManyToManyField(companyData,related_name="appliedcompanies",null=True)
+
+    def __str__(self) :
+        return self.rollNo
 "---------------------------------------------------------------------------------------------------------------------"
 class addUserExcel(models.Model):
     excelFile = models.FileField(upload_to='uploads/')
@@ -136,6 +140,9 @@ class users(AbstractUser):
     
     def token(self):
         refresh_token = RefreshToken.for_user(self)
+        refresh_token['username'] = self.username
+        userroles = userRoles.objects.get(id=self.roles.id)
+        refresh_token['role']= userroles.role
         
         return {
             'refresh_token': str(refresh_token),

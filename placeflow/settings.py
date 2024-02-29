@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-o+w9omvhb0=dm@@2c3q8m_g5z2t@jbv-9@08#8ph*@$_t%_sdt
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.235.10.116',]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'tablemanagement',
     'CIR',
+    'students',
     "corsheaders",
 ]
 
@@ -117,7 +118,11 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     # Add any other authentication backends if needed
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 

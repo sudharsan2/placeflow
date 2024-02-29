@@ -1,29 +1,31 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import postcompanyDataSerializer,getcompanyDataSerializer,excelRegistrationSerializer
-from tablemanagement.models import companyData
+from .serializers import postcompanyDataSerializer,getcompanyDataSerializer,excelRegistrationSerializer,excelAddStudentInfoSerializer
+from tablemanagement.models import companyData,studentData
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 import base64
 from django.http import HttpRequest
 import pandas as pd
 import requests
 from io import BytesIO
 
-# Create your views here.
+
 
 class enterCompanyDataAPI(APIView):
     def post(self, request):
-        payload = request.data
-        serializer = postcompanyDataSerializer(data=payload)
-        if serializer.is_valid():
-            serializer.save()
-        return Response({"message": "succesfully created"}, status=status.HTTP_201_CREATED)
-    
-# class excelTesting(APIView):
-#     def post(self, request):
-#         payload = request.data
-#         excel_binary_data = payload['ex']
+        try:
+            payload = request.data
+            serializer = postcompanyDataSerializer(data=payload)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"message":"Successfully Inserted the Data"}, status=status.HTTP_201_CREATED)
+
 
 class getallCompanyDataAPI(APIView):
     def get(self, request, *args, **kwargs):
@@ -37,6 +39,7 @@ class getallCompanyDataAPI(APIView):
 
         
 class handleExcelFileAPI(APIView):
+    permission_classes= [IsAuthenticated]
     def post(self, request):
         payload = request.data['excel']
         file_content = payload.read()
@@ -56,18 +59,52 @@ class handleExcelFileAPI(APIView):
         for data_dict in result_list:
             
             request_data = {"username": data_dict["username"], 
-                            "password": data_dict["password"], 
-                            "email": data_dict["email"],
-                            "roles": data_dict["roles"]}  
+                            "password": "welcome", 
+                            "email": data_dict["username"]+"@gmail.com",
+                            "roles": "student"}  
+            
             serializer = excelRegistrationSerializer(data=request_data)
             if serializer.is_valid():
                 serializer.save()
                 responses.append(serializer.data)
         return Response(responses, status=status.HTTP_201_CREATED)
-            
-
-
     
+
+class handleExcelStudentInfo(APIView):
+    # permission_classes= [IsAuthenticated]
+    def post(self, request):
+            try:
+                payload = request.data['excel']
+                file_content = payload.read()
+                excel_file = BytesIO(file_content)
+                df = pd.read_excel(excel_file, header=None)
+                columns = df.iloc[0].tolist()
+                data = df.iloc[1:]
+                data = data.reset_index(drop=True)
+                result_list = [dict(zip(columns, row))for index,row in data.iterrows()]
+
+                responses =[]
+                for data_dict in result_list:
+                    request_data = {"rollNo": data_dict["rollno"], 
+                                    "department": data_dict["department"], 
+                                    "CGPA": float(data_dict["cgpa"]),
+                                    "gender": data_dict["gender"], 
+                                    "standing_Arrears": int(data_dict["standing_arrears"]),
+                                    "arrear_history": int(data_dict["arrear_history"]), 
+                                    "markTenth": int(data_dict["Tenth_mark"]),
+                                    "markTwelfth": int(data_dict["Twelfth_mark"]),
+                                    "batch": int(data_dict["batch"]),
+                                    "appliedCompanies" : None}
+                    serializer = excelAddStudentInfoSerializer(data=request_data)
+                    if serializer.is_valid():
+                        serializer.save()
+                        responses.append(serializer.data)
+                return Response(responses, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"message": "Data Inserted Successfully"},status=status.HTTP_201_CREATED)
+        
+
+
 
         
 
