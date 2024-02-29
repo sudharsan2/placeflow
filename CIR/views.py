@@ -10,6 +10,8 @@ from django.http import HttpRequest
 import pandas as pd
 import requests
 from io import BytesIO
+from django.conf import settings
+import base64
 
 
 
@@ -103,7 +105,24 @@ class handleExcelStudentInfo(APIView):
             except Exception as e:
                 return Response({"message": "Data Inserted Successfully"},status=status.HTTP_201_CREATED)
         
+class sendRegisterationTemplateAPI(APIView):
+    def get(self, request):
+        file_path =  (settings.BASE_DIR / "ExcelTemplate/Book10.xlsx").resolve()
+        with open(file_path,'rb') as file:
+            file_content = file.read()
 
+        base64_content = base64.b64encode(file_content).decode('utf-8')
+        meta_data = {
+            "file_name" : "Registeration Template",
+            "file_size" : len(file_content)
+        }
+
+        response_data = {
+            # "metadata" : meta_data,
+            "Template" : base64_content
+        }
+
+        return Response(response_data,status=status.HTTP_200_OK)
 
 
         
