@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from CIR.serializers import genderSerializer,departmentSerializer,arrearSerializer
-from tablemanagement.models import studentData
+from CIR.serializers import genderSerializer,departmentSerializer,arrearSerializer,jobDescriptionSerializer,qualificationSerializer,jobTypeSerializer
+from tablemanagement.models import studentData,companyData
 
 class getstudentDataSerializer(serializers.ModelSerializer):
     gender = genderSerializer()
@@ -12,3 +12,15 @@ class getstudentDataSerializer(serializers.ModelSerializer):
         model = studentData
         fields = "__all__"
 
+class getStudentSpecificCompanySerializer(serializers.ModelSerializer):
+    jobRole = jobDescriptionSerializer(many=True, required=False)
+    preferredGender = genderSerializer(many= True)
+    qualification = qualificationSerializer(many= True)
+    eligibleDepartments = departmentSerializer(many= True)
+    jobType = jobTypeSerializer()
+    maxCurrentArrears = arrearSerializer()
+    historyOfArrears = arrearSerializer()
+
+    class Meta:
+        model = companyData
+        fields = "__all__"
