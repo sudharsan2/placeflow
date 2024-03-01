@@ -99,7 +99,7 @@ class studentData(models.Model):
     # historyOfArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "historyofarrearsstudent",null = True)
     batch = models.IntegerField(null= True)
     appliedCompanies = models.ManyToManyField(companyData,related_name="appliedcompanies1",null=True)
-
+    resume = models.FileField(upload_to='pdfs/', null=True, blank=True)
     def __str__(self) :
         return self.rollNo
 "---------------------------------------------------------------------------------------------------------------------"

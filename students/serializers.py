@@ -68,3 +68,7 @@ class addAppliesCompaniesSerializer(serializers.ModelSerializer):
 #         self.student_instance.appliedCompanies.add(company_instance)
 #         return self.student_instance
 
+class uploadResumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = studentData
+        fields = "__all__"

@@ -4,8 +4,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from tablemanagement.models import studentData,companyData
 from CIR.serializers import PatchCompanyDataSerializer
-from .serializers import getstudentDataSerializer,getStudentSpecificCompanySerializer,addAppliesCompaniesSerializer
-
+from .serializers import getstudentDataSerializer,getStudentSpecificCompanySerializer,addAppliesCompaniesSerializer,uploadResumeSerializer
+from io import BytesIO
+from django.http import HttpResponse
+from django.conf import settings
+from rest_framework.parsers import FileUploadParser
+import os
 
 class getStudentDataAPI(APIView):
     permission_classes = [IsAuthenticated]
@@ -42,10 +46,6 @@ class applyCompaniesAPI(APIView):
 
 
 
-
-        
-
-
 class getCompanyOnCriteriaAPI(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
@@ -75,7 +75,43 @@ class getCompanyOnCriteriaAPI(APIView):
         return Response(final_company_list,status=status.HTTP_200_OK)
 
 
-     
+class uploadResumeAPI(APIView):
+    
+    def post(self, request, **kwargs):
+        rollNo = kwargs.get('rollNo')
+        pdf_file = request.data.get('resume')
+        student_instance = studentData.objects.get(rollNo=rollNo)
+
+        if pdf_file:
+            student_instance.resume = pdf_file
+            student_instance.save()
+
+            return Response({"message": "PDF Uploaded Successfully"}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "No PDF file provided"}, status=status.HTTP_400_BAD_REQUEST)
+        # else:
+        #     return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class getUploadResumeAPI(APIView):
+    def get(self,request,**kwargs):
+        rollNo = kwargs.get('rollNo')
+        student_instance = studentData.objects.get(rollNo = rollNo)
+        serializer = uploadResumeSerializer(student_instance)
+        file = serializer.data['resume']
+        file_name = file.split('/')[-1]
+        
+        file_path = file[1:]
+        resume_file_path = os.path.join(settings.BASE_DIR, file_path)
+        print(resume_file_path)
+        with open(resume_file_path,'rb') as file:
+            actual_resume_file = BytesIO(file.read())
+
+        response = HttpResponse(actual_resume_file, content_type='application/pdf')
+        response['Content-Disposition'] =f'attachment; filename={file_name}'
+        return response
+
+
+
 
         
 

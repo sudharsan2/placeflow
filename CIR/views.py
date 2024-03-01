@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from .serializers import postcompanyDataSerializer,excelRegistrationSerializer,excelAddStudentInfoSerializer,qualificationSerializer,departmentSerializer,jobTypeSerializer,jobDescriptionSerializer,genderSerializer,PatchCompanyDataSerializer,studentDataSerializer,getCompanyDataSerializer
 from tablemanagement.models import companyData,studentData,Qualification,department,jobType,jobDescriptionModel,gender
 from students.serializers import getstudentDataSerializer,companyDataSerializer
-from .appliedstudents import write_list_to_excel
+from .appliedstudents import write_dict_to_excel
 from rest_framework.response import Response
 from django.http import FileResponse
 from rest_framework import status
@@ -186,34 +186,72 @@ class UpdateCompanyDataAPI(APIView):
 
 
 
+# class getAppliedStudentsForParticularCompany(APIView):
+    
+#     def post(self,request):
+#         payload = request.data
+#         jobPostId = payload.get('id',None)
+#         student_instance = studentData.objects.all()
+#         serializer2 = studentDataSerializer(student_instance, many = True)
+#         studentrollnolist =[]
+#         studentresumelist =[]
+#         data2 = serializer2.data
+#         existing_excel_file = (settings.BASE_DIR / "ExcelTemplate/appliedStudents.xlsx").resolve()
+#         target_column1 = "applied Students"
+#         target_column2 = "resumes"
+        
+        
+
+        
+#         for i in data2:
+#             if jobPostId in i['appliedCompanies']:
+#                 studentrollnolist.append(i['rollNo'])
+#                 studentresumelist.append(f"http://127.0.0.1:8000/students/getstudentresume/{i['rollNo']}")
+#         if len(studentrollnolist) !=0 :
+#             write_list_to_excel(existing_excel_file, target_column1, studentrollnolist)
+#         else: 
+#             write_list_to_excel(existing_excel_file, target_column1, ["no one applies yet"])
+
+#         with open(existing_excel_file,'rb') as file:
+#             excel_bytes = BytesIO(file.read()) 
+#         response = HttpResponse(excel_bytes, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+#         response['Content-Disposition'] ='attachment; filename="appliedStudentsList.xlsx"'
+#         return response
+
 class getAppliedStudentsForParticularCompany(APIView):
     
-    def post(self,request):
+    def post(self, request):
         payload = request.data
-        jobPostId = payload.get('id',None)
+        jobPostId = payload.get('id', None)
         student_instance = studentData.objects.all()
-        serializer2 = studentDataSerializer(student_instance, many = True)
-        studentrollnolist =[]
-        studentemaillist =[]
+        serializer2 = studentDataSerializer(student_instance, many=True)
         data2 = serializer2.data
-        existing_excel_file = (settings.BASE_DIR / "ExcelTemplate/appliedStudents.xlsx").resolve()
-        target_column1 = "applied Students"
-        
-        
 
-        
+        existing_excel_file = (settings.BASE_DIR / "ExcelTemplate/appliedStudents.xlsx").resolve()
+        new_excel_file = (settings.BASE_DIR / "appliedStudent.xlsx").resolve()
+        target_columns = {
+            "applied Students": [],
+            "resumes": [],
+            # Add more columns as needed
+        }
+
         for i in data2:
             if jobPostId in i['appliedCompanies']:
-                studentrollnolist.append(i['rollNo'])
-        write_list_to_excel(existing_excel_file, target_column1, studentrollnolist)
+                target_columns["applied Students"].append(i['rollNo'])
+                target_columns["resumes"].append(f"http://127.0.0.1:8000/students/getstudentresume/{i['rollNo']}")
+                # Add more columns as needed
 
-        with open(existing_excel_file,'rb') as file:
+        if any(target_columns.values()):
+            write_dict_to_excel(existing_excel_file, target_columns)
+        else: 
+            write_dict_to_excel(existing_excel_file, {"applied_students": ["no one applies yet"]})
+
+        with open(existing_excel_file, 'rb') as file:
             excel_bytes = BytesIO(file.read()) 
-        response = HttpResponse(excel_bytes, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] ='attachment; filename="registerTemplate.xlsx"'
-        return response
 
-        # return Response(studentlist, status=status.HTTP_200_OK)
+        response = HttpResponse(new_excel_file, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="appliedStudentsList.xlsx"'
+        return response
     
     
 
