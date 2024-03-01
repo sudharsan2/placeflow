@@ -166,6 +166,18 @@ class jobTypeSerializer(serializers.ModelSerializer):
         model = jobType
         fields = "__all__"
 
+class getCompanyDataSerializer(serializers.ModelSerializer):
+    preferredGender= genderSerializer(many = True)
+    jobRole= jobDescriptionSerializer(many = True)
+    qualification= qualificationSerializer(many = True)
+    eligibleDepartments= departmentSerializer(many = True)
+    jobType= jobTypeSerializer()
+    maxCurrentArrears= arrearSerializer()
+    historyOfArrears= arrearSerializer()
+    class Meta:
+        model = companyData
+        fields = "__all__"
+
 class companyDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = companyData
@@ -173,6 +185,7 @@ class companyDataSerializer(serializers.ModelSerializer):
         
 
 class studentDataSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = studentData
         fields = "__all__"
@@ -254,13 +267,6 @@ class arrearSerializer(serializers.ModelSerializer):
         model = arrears
         fields = "__all__"
 
-# class getAppliesStudentsListSerializer(serializers.Serializer):
-#     id = serializers.IntegerField()
-
-#     def create(self, validated_data):
-#         id = validated_data.get('id',None)
-#         company_instance = companyData.objects.get(id=id)
-#         c
 
 
 

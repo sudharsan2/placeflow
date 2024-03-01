@@ -2,7 +2,8 @@ from rest_framework import serializers
 from CIR.serializers import genderSerializer,departmentSerializer,arrearSerializer,jobDescriptionSerializer,qualificationSerializer,jobTypeSerializer
 from tablemanagement.models import studentData,companyData
 
-
+# class getCompanyDataSerializer(serializers.ModelSerializer):
+#     class Meta
 class companyDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = companyData

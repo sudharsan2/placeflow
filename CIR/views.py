@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import postcompanyDataSerializer,excelRegistrationSerializer,excelAddStudentInfoSerializer,qualificationSerializer,departmentSerializer,jobTypeSerializer,jobDescriptionSerializer,genderSerializer,PatchCompanyDataSerializer,studentDataSerializer
+from .serializers import postcompanyDataSerializer,excelRegistrationSerializer,excelAddStudentInfoSerializer,qualificationSerializer,departmentSerializer,jobTypeSerializer,jobDescriptionSerializer,genderSerializer,PatchCompanyDataSerializer,studentDataSerializer,getCompanyDataSerializer
 from tablemanagement.models import companyData,studentData,Qualification,department,jobType,jobDescriptionModel,gender
 from students.serializers import getstudentDataSerializer,companyDataSerializer
 from .appliedstudents import write_list_to_excel
@@ -38,7 +38,7 @@ class getallCompanyDataAPI(APIView):
     def get(self, request, *args, **kwargs):
         try:
             payload = companyData.objects.all()
-            serializer = getcompanyDataSerializer(payload, many= True)
+            serializer = getCompanyDataSerializer(payload, many= True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
