@@ -98,7 +98,7 @@ class studentData(models.Model):
     # maxCurrentArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "maxcurrentarrearsstudent",null = True)
     # historyOfArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "historyofarrearsstudent",null = True)
     batch = models.IntegerField(null= True)
-    appliedCompanies = models.ManyToManyField(companyData,related_name="appliedcompanies",null=True)
+    appliedCompanies = models.ManyToManyField(companyData,related_name="appliedcompanies1",null=True)
 
     def __str__(self) :
         return self.rollNo

@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import postcompanyDataSerializer,getcompanyDataSerializer,excelRegistrationSerializer,excelAddStudentInfoSerializer
-from tablemanagement.models import companyData,studentData
+from .serializers import postcompanyDataSerializer,excelRegistrationSerializer,excelAddStudentInfoSerializer,qualificationSerializer,departmentSerializer,jobTypeSerializer,jobDescriptionSerializer,genderSerializer,PatchCompanyDataSerializer,studentDataSerializer
+from tablemanagement.models import companyData,studentData,Qualification,department,jobType,jobDescriptionModel,gender
+from students.serializers import getstudentDataSerializer,companyDataSerializer
+from .appliedstudents import write_list_to_excel
 from rest_framework.response import Response
 from django.http import FileResponse
 from rest_framework import status
@@ -107,33 +109,26 @@ class handleExcelStudentInfo(APIView):
                 return Response(responses, status=status.HTTP_201_CREATED)
             except Exception as e:
                 return Response({"message": "Data Inserted Successfully"},status=status.HTTP_201_CREATED)
+            
+
         
 class sendRegisterationTemplateAPI(APIView):
     def get(self, request):
         file_path =  (settings.BASE_DIR / "ExcelTemplate/Book10.xlsx").resolve()
-        # with open(file_path,'rb') as file:
-        #     file_content = file.read()
 
-        # # base64_content = base64.b64encode(file_content).decode('utf-8')
-        # meta_data = {
-        #     "file_name" : "Registeration Template",
-        #     "file_size" : len(file_content)
-        # }
+        with open(file_path,'rb') as excel_file:            
+# Create BytesIO object
+            excel_bytes = BytesIO(excel_file.read())        
+# Create response
+        response = HttpResponse(excel_bytes, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] ='attachment; filename="registerTemplate.xlsx"'
+        return response
+    
 
-        # response_data = {
-        #     # "metadata" : meta_data,
-        #     "Template" : file_content
-        # }
-
-        # return FileResponse(file_content, as_attachment=True, filename="Registration_Template.xlsx")
-        # df = pd.read_excel(file_path)
-
-        #         # Convert DataFrame to blob
-        # excel_data = BytesIO()
-        # with pd.ExcelWriter(excel_data, engine='xlsxwriter') as writer:
-        #     df.to_excel(writer, index=False)
-        # excel_data.seek(0)
-        # Return the blob as response
+    
+class sendRegisterationTemplateAPI(APIView):
+    def get(self, request):
+        file_path =  (settings.BASE_DIR / "ExcelTemplate/Book11.xlsx").resolve()
 
         with open(file_path,'rb') as excel_file:            
 # Create BytesIO object
@@ -143,9 +138,84 @@ class sendRegisterationTemplateAPI(APIView):
         response['Content-Disposition'] ='attachment; filename="registerTemplate.xlsx"'
         return response
         
+
+
+class getQualificationAPI(APIView):
+    def get(self, request):
+        instance = Qualification.objects.all()
+        serializer = qualificationSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class getDepartmentAPI(APIView):
+    def get(self, request):
+        instance = department.objects.all()
+        serializer = departmentSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class getJobTypeAPI(APIView):
+    def get(self, request):
+        instance = jobType.objects.all()
+        serializer = jobTypeSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class getJobRoleAPI(APIView):
+    def get(self, request):
+        instance = jobDescriptionModel.objects.all()
+        serializer = jobDescriptionSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class getGenderAPI(APIView):
+    def get(self, request):
+        instance = gender.objects.all()
+        serializer = genderSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class UpdateCompanyDataAPI(APIView):
+    def patch(self, request, **kwargs):
+        try:
+            payload = request.data
+            id = kwargs.get('id')
+            instance = companyData.objects.get(id = id)
+            serializer = PatchCompanyDataSerializer(instance, data=payload, partial= True)
+            if serializer.is_valid():
+                serializer.save()
+            return Response(serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
+        except Exception as e:
+            return Response({"message":"Data Updated Successfully"}, status=status.HTTP_206_PARTIAL_CONTENT)
+
+
+
+
+class getAppliedStudentsForParticularCompany(APIView):
+    
+    def post(self,request):
+        payload = request.data
+        jobPostId = payload.get('id',None)
+        student_instance = studentData.objects.all()
+        serializer2 = studentDataSerializer(student_instance, many = True)
+        studentrollnolist =[]
+        studentemaillist =[]
+        data2 = serializer2.data
+        existing_excel_file = (settings.BASE_DIR / "ExcelTemplate/appliedStudents.xlsx").resolve()
+        target_column1 = "applied Students"
         
         
 
         
+        for i in data2:
+            if jobPostId in i['appliedCompanies']:
+                studentrollnolist.append(i['rollNo'])
+        write_list_to_excel(existing_excel_file, target_column1, studentrollnolist)
 
-        
+        with open(existing_excel_file,'rb') as file:
+            excel_bytes = BytesIO(file.read()) 
+        response = HttpResponse(excel_bytes, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] ='attachment; filename="registerTemplate.xlsx"'
+        return response
+
+        # return Response(studentlist, status=status.HTTP_200_OK)
+    
+    
+
+# Example usage
+

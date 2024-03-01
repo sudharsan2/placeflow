@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from tablemanagement.models import companyData,jobDescriptionModel,users,userRoles,studentData,department,gender,arrears,Qualification,jobType
 
+
+
+
 class postcompanyDataSerializer(serializers.ModelSerializer):
     jobRole = serializers.ListField(write_only=True)
     preferredGender = serializers.ListField(write_only=True)
@@ -11,7 +14,7 @@ class postcompanyDataSerializer(serializers.ModelSerializer):
     historyOfArrears = serializers.IntegerField(required=False)
 
     class Meta:
-        model = companyData  # Correct model name
+        model = companyData  
         fields = ["companyName","companyDescription",
     "preferredGender" ,
     "jobDescription",
@@ -74,7 +77,63 @@ class postcompanyDataSerializer(serializers.ModelSerializer):
 
         return company_instance
 
-    
+from rest_framework import serializers
+
+class PatchCompanyDataSerializer(serializers.Serializer):
+    jobRole = serializers.ListField(write_only=True)
+    preferredGender = serializers.ListField(write_only=True)
+    qualification = serializers.ListField(write_only=True)
+    eligibleDepartments = serializers.ListField(write_only=True)
+    jobType = serializers.CharField(required=False)
+    maxCurrentArrears = serializers.IntegerField(required=False)
+    historyOfArrears = serializers.IntegerField(required=False)
+
+    def update(self, instance, validated_data):
+        job_role_data = validated_data.pop('jobRole', [])
+        gender_data = validated_data.pop('preferredGender', [])
+        qualification_data = validated_data.pop('qualification', [])
+        department_data = validated_data.pop('eligibleDepartments', [])
+        jobtype_data = validated_data.pop('jobType', '')
+        currentarrear_data = validated_data.pop('maxCurrentArrears', 0)
+        arrearhistory_data = validated_data.pop('historyOfArrears', 0)
+
+        jobtype_instance, _ = jobType.objects.get_or_create(type=jobtype_data)
+        currentarrear_instance, _ = arrears.objects.get_or_create(count=currentarrear_data)
+        arrearhistory_instance, _ = arrears.objects.get_or_create(count=arrearhistory_data)
+
+        validated_data['jobType'] = jobtype_instance
+        validated_data['maxCurrentArrears'] = currentarrear_instance
+        validated_data['historyOfArrears'] = arrearhistory_instance
+
+        # Update the instance with the remaining validated_data
+        for key, value in validated_data.items():
+            setattr(instance, key, value)
+
+        instance.save()
+
+        # Update the related objects
+        instance.jobRole.clear()
+        for role_name in job_role_data:
+            job_description_instance1, created1 = jobDescriptionModel.objects.get_or_create(role=role_name)
+            instance.jobRole.add(job_description_instance1)
+
+        instance.preferredGender.clear()
+        for role_name in gender_data:
+            job_description_instance2, created2 = gender.objects.get_or_create(name=role_name)
+            instance.preferredGender.add(job_description_instance2)
+
+        instance.qualification.clear()
+        for role_name in qualification_data:
+            job_description_instance3, created3 = Qualification.objects.get_or_create(qualification_name=role_name)
+            instance.qualification.add(job_description_instance3)
+
+        instance.eligibleDepartments.clear()
+        for role_name in department_data:
+            job_description_instance4, created4 = department.objects.get_or_create(name=role_name)
+            instance.eligibleDepartments.add(job_description_instance4)
+
+        return instance
+
 
 class jobDescriptionSerializer(serializers.ModelSerializer):
     
@@ -107,19 +166,16 @@ class jobTypeSerializer(serializers.ModelSerializer):
         model = jobType
         fields = "__all__"
 
-class getcompanyDataSerializer(serializers.ModelSerializer):
-    jobRole = jobDescriptionSerializer(many=True, required=False)
-    preferredGender = genderSerializer(many= True)
-    qualification = qualificationSerializer(many= True)
-    eligibleDepartments = departmentSerializer(many= True)
-    jobType = jobTypeSerializer()
-    maxCurrentArrears = arrearSerializer()
-    historyOfArrears = arrearSerializer()
-
+class companyDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = companyData
         fields = "__all__"
+        
 
+class studentDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = studentData
+        fields = "__all__"
 
 
 
@@ -168,8 +224,7 @@ class excelAddStudentInfoSerializer(serializers.ModelSerializer):
         standing_arrears_value = validated_data.pop('standing_Arrears', None)
         arrear_history_value = validated_data.pop('arrear_history', None)
 
-        print(standing_arrears_value)
-        print(arrear_history_value)
+        
 
         department_instance, created = department.objects.get_or_create(name=departments)
         gender_instance, created = gender.objects.get_or_create(name=genders)
@@ -198,5 +253,14 @@ class arrearSerializer(serializers.ModelSerializer):
     class Meta:
         model = arrears
         fields = "__all__"
+
+# class getAppliesStudentsListSerializer(serializers.Serializer):
+#     id = serializers.IntegerField()
+
+#     def create(self, validated_data):
+#         id = validated_data.get('id',None)
+#         company_instance = companyData.objects.get(id=id)
+#         c
+
 
 

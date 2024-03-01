@@ -3,7 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from tablemanagement.models import studentData,companyData
-from .serializers import getstudentDataSerializer,getStudentSpecificCompanySerializer
+from CIR.serializers import PatchCompanyDataSerializer
+from .serializers import getstudentDataSerializer,getStudentSpecificCompanySerializer,addAppliesCompaniesSerializer
 
 
 class getStudentDataAPI(APIView):
@@ -21,22 +22,28 @@ class getIndividualCompaniesAPI(APIView):
         id = kwargs.get('id')
         instance  = companyData.objects.get(id = id)
 
-# class applyCompaniesAPI(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def put(self,request):
-#         payload = request.data
-#         rollNo = request.user.username
-#         instance = studentData.objects.get(rollNo = rollNo)
-#         company_instance = companyData.objects.get(companyName = payload.companyName)
-#         if (instance.CGPA>=payload.CGPA_Required and instance.gender in payload.preferredGender 
-#             and instance.markTenth >= payload.markTenth and instance.markTwelfth >= payload.markTenth 
-#             and instance.department in payload.eligibleDepartments and instance.arrear_history <= payload.historyOfArrears
-#             and instance.standing_Arrears <= payload.maxCurrentArrears):
-#             instance.appliedCompanies.add(company_instance)
-#             serializer = getstudentDataSerializer(instance)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         else:
-#             return Response({'message': 'you dont not match the requirements'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class applyCompaniesAPI(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, **kwargs):
+        rollNo = request.user.username
+        payload = request.data
+        payload['rollNo'] = rollNo
+        print(payload)
+        
+
+        serializer = addAppliesCompaniesSerializer(data=payload,partial =True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_206_PARTIAL_CONTENT)
+        else:
+            return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+        
 
 
 class getCompanyOnCriteriaAPI(APIView):
