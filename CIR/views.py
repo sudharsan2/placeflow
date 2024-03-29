@@ -42,7 +42,33 @@ class getallCompanyDataAPI(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class getacompanyDataAPI(APIView):
+    def get(self, request, **kwargs):
+        try:
+            id = kwargs.get('id')
+            payload = companyData.objects.get(id = id)
+            serializer = getCompanyDataSerializer(payload)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         
+class registerStudentAPI(APIView):
+    permission_classes= [IsAuthenticated]
+    def post(self,request):
+
+        request_data = {"username": request.data.get("username"),
+                            "password": request.data.get("username")+request.data.get("dob"), 
+                            "dob" : request.data.get("dob"),
+                            "email": request.data.get("email"),
+                            "roles": "student"}  
+            
+        serializer = excelRegistrationSerializer(data=request_data)
+        if serializer.is_valid():
+            serializer.save()
+            
+        return Response("successfully user created", status=status.HTTP_201_CREATED)
 
         
 class handleExcelFileAPI(APIView):
@@ -66,6 +92,7 @@ class handleExcelFileAPI(APIView):
         for data_dict in result_list:
             
             request_data = {"username": data_dict["username"], 
+                            "dob" : data_dict["dob"],
                             "password": "welcome", 
                             "email": data_dict["username"]+"@gmail.com",
                             "roles": "student"}  
@@ -76,6 +103,26 @@ class handleExcelFileAPI(APIView):
                 responses.append(serializer.data)
         return Response(responses, status=status.HTTP_201_CREATED)
     
+class addstudentinfo(APIView):
+    def post(self, request):
+        try:
+            request_data = {"rollNo": request.data.get("rollno",None), 
+                                        "department": request.data.get("department",None), 
+                                        "CGPA": float(request.data.get("cgpa",None)),
+                                        "gender": request.data.get("gender",None), 
+                                        "standing_Arrears": int(request.data.get("standing_arrears",None)),
+                                        "arrear_history": int(request.data.get("arrear_history",None)), 
+                                        "markTenth": int(request.data.get("Tenth_mark",None)),
+                                        "markTwelfth": int(request.data.get("Twelfth_mark",None)),
+                                        "batch": int(request.data.get("batch",None)),
+                                        "appliedCompanies" : None}
+            serializer = excelAddStudentInfoSerializer(data=request_data)
+            if serializer.is_valid():
+                serializer.save()
+                
+            return Response(request_data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"message": "Data Inserted Successfully"},status=status.HTTP_201_CREATED)
 
 class handleExcelStudentInfo(APIView):
     # permission_classes= [IsAuthenticated]
@@ -126,7 +173,7 @@ class sendRegisterationTemplateAPI(APIView):
     
 
     
-class sendRegisterationTemplateAPI(APIView):
+class sendStudentDataTemplateAPI(APIView):
     def get(self, request):
         file_path =  (settings.BASE_DIR / "ExcelTemplate/Book11.xlsx").resolve()
 
@@ -253,7 +300,40 @@ class getAppliedStudentsForParticularCompany(APIView):
         response['Content-Disposition'] = 'attachment; filename="appliedStudentsList.xlsx"'
         return response
     
-    
+
+class getallstudents(APIView):
+    def get(self, request):
+        instance = studentData.objects.all()
+        serializer = studentDataSerializer(instance, many= True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # Example usage
 
+class getastudent(APIView):
+    def get(self, request,**kwargs):
+        id = kwargs.get('id')
+        instance = studentData.objects.get(id = id)
+        serializer = studentDataSerializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class editStudent(APIView):
+    def post(self, request):
+        id = request.data['id']
+        instance = studentData.objects.get(id = id)
+        serializer = studentDataSerializer(instance,data = request.data ,partial= True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class editJob(APIView):
+    def post(self, request):
+        id = request.data['id']
+        instance = companyData.objects.get(id = id)
+        serializer = companyDataSerializer(instance, data= request.data, partial = True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

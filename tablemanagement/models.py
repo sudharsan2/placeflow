@@ -85,6 +85,9 @@ class companyData(models.Model):
     maxCurrentArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "maxcurrentarrearscompany", null= True)
     historyOfArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "historyofarrearscompany", null= True)
     batch = models.IntegerField(null= True)
+    attachment = models.FileField(upload_to='attachments/', null=True, blank=True)
+
+
 
 class studentData(models.Model):
     rollNo =models.CharField(max_length = 50)
@@ -99,6 +102,7 @@ class studentData(models.Model):
     # historyOfArrears = models.ForeignKey(arrears, on_delete= models.CASCADE, related_name = "historyofarrearsstudent",null = True)
     batch = models.IntegerField(null= True)
     appliedCompanies = models.ManyToManyField(companyData,related_name="appliedcompanies1",null=True)
+    
     resume = models.FileField(upload_to='pdfs/', null=True, blank=True)
     def __str__(self) :
         return self.rollNo
@@ -116,6 +120,7 @@ class userRoles(models.Model):
 class users(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    dob = models.DateField(null = True)
     email = models.EmailField(max_length=50, unique=True)
     is_active = models.BooleanField(default=True)
     username = models.CharField(max_length=255, unique=True)
